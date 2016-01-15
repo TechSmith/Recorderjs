@@ -1,10 +1,22 @@
-AudioContext = AudioContext || webkitAudioContext || mozAudioContext;
+window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 var Recorder = function( config ){
 
   if ( !Recorder.isRecordingSupported() ) {
     throw "Recording is not supported in this browser";
+  }
+
+  try {
+    this.audioContext = new window.AudioContext();
+  }
+  catch(error){
+    if (error.name === "NotSupportedError"){
+      var e = new Error(error.message);
+      e.name = "TooManyAudioContextsError";
+      throw e;
+    }
+    throw error;
   }
 
   config = config || {};
@@ -39,8 +51,6 @@ Recorder.isRecordingSupported = function(){
 Recorder.prototype.addEventListener = function( type, listener, useCapture ){
   this.eventTarget.addEventListener( type, listener, useCapture );
 };
-
-Recorder.prototype.audioContext = new AudioContext();
 
 Recorder.prototype.createAudioNodes = function(){
   var that = this;
